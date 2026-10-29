@@ -20,6 +20,33 @@ invents a fact about you.
 
 ---
 
+## TL;DR
+
+1. **Set up once (about 5 minutes).** Open Claude Code in this folder and say "set me up". It reads your
+   resume, asks one list of questions, and writes your private config: profile, answers and targets.
+   None of that is ever committed.
+2. **It finds roles.** Sweeps public company job boards (Greenhouse, Ashby, Lever, Workable), VC
+   portfolio boards and LinkedIn's public search, then keeps only postings that pass your filters:
+   title, location, pay floor, years of experience and your own quality bar.
+3. **It applies on the company's own form.** For each match it tailors a one-page resume to the posting
+   (facts from your resume only), fills the real application in your Chrome with real clicks and
+   keystrokes, logs every answer, submits, and screenshots the confirmation. It never invents a fact,
+   never creates an account, and never uses Easy Apply.
+4. **Workday portals:** you sign in, and the bundled Chrome extension fills the form. You click Submit.
+5. **Recruiter outreach:** it sorts your applications into tiers, finds a recruiter or hiring manager at
+   each company, and drafts a short email into your Gmail Drafts. Nothing sends until you approve the batch.
+
+> **Recommended: connect [Apollo](https://www.apollo.io) for email outreach.** A short note to a
+> recruiter often gets a reply when the application alone sits in a queue, and Apollo is how the
+> agent finds the right person and their work email. Searching people is free; revealing an email
+> costs one credit. Create an account, copy your API key, and store it in **your own Terminal**
+> (never paste it into the chat):
+> ```bash
+> security add-generic-password -U -s apollo-api-key -a you -w
+> ```
+> Check it with `python3 scripts/apollo.py health`. Details under
+> [Optional add-ons](#optional-add-ons-each-needs-one-step-from-you), item 6.
+
 ## Quick start
 
 **You need:** [Claude Code](https://claude.com/claude-code) signed in · Chrome with the
