@@ -17,6 +17,8 @@ done
 
 # launchd runs with a minimal PATH that lacks the user's shell setup, so resolve
 # the claude binary explicitly. Prefer the stable ~/.local/bin symlink, then PATH.
+# ~/.local/bin also holds the tectonic and pdftotext links that resume tailoring needs.
+export PATH="$HOME/.local/bin:$PATH"
 if [ -x "$HOME/.local/bin/claude" ]; then
   CLAUDE_BIN="$HOME/.local/bin/claude"
 elif command -v claude >/dev/null 2>&1; then

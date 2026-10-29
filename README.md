@@ -162,6 +162,10 @@ One file, `config/settings.json`. The launcher turns it into the instructions th
 | `documents.cover_letter` | Draft a cover letter when the form has a field for one. On by default. See below. |
 | `documents.tailor_resume` | Upload a resume reordered and trimmed for each posting. On by default. See below. |
 | `safety.*` | No accounts, no CAPTCHA solving, no fabricated facts, screenshot every submit. |
+| `targets.title_include_regex` / `title_exclude_regex` | Override which titles the board sweep keeps. Empty keeps the software-engineering default; set them for product, ops, analytics or any other search. |
+| `targets.linkedin_query` / `linkedin_title_regex` / `linkedin_locations` | Your own LinkedIn search for `scripts/linkedin_sweep.py` (a source only; the agent never signs in). |
+| `outreach.*` / `outreach_senders` | Recruiter-email add-on: tracker file, which companies count as Tier A, sending inboxes. See add-ons. |
+| `documents.export_dir` | Where tailored resumes are copied for applying by hand. Default `~/Desktop/custom resume`. |
 
 ### Cover letters and tailored resumes
 
@@ -251,6 +255,55 @@ shell from reading the Keychain or clipboard, as a guardrail.
 **3. Your interview tracker.** If you track interviews in a note (Obsidian or any text file), set
 `run.interview_tracker_path` to its path and write each company as a `[[wikilink]]`. Every company in
 it becomes a hard skip, so a run never sends a second application to a company where you are mid-loop.
+
+**4. Searching for something other than engineering.** The defaults target new-grad software roles.
+For any other search (product, operations, analytics, design...), set `targets.roles`,
+`targets.seniority`, `targets.min_annual_comp_usd` and `targets.prestige_note` as usual, then:
+
+```json
+"title_include_regex": "product manager|\\bapm\\b|product operations|product analyst",
+"title_exclude_regex": "principal|\\bstaff\\b|director|head of|\\bvp\\b|intern",
+"linkedin_query": "(\"associate product manager\" OR \"product operations\" OR \"product analyst\")"
+```
+
+The onboarding conversation fills these in for you if you tell it what you are looking for.
+
+**5. Workday autofill extension** (`extension/workday-autofill/`). Workday portals need an account, so
+the agent cannot apply there. This small Chrome extension does the typing once you are signed in:
+contact info, every job from your resume, education, skills ranked by the posting, the Yes/No
+questions your profile answers, and the voluntary EEO pages. It never clicks Submit and never ticks
+a terms box. Questions it does not know are flagged, and the answer you give is remembered for the
+next Workday form.
+
+1. `python3 scripts/workday_ext.py build` writes your profile and base resume into the extension's
+   `data/` folder (gitignored).
+2. `chrome://extensions` → Developer mode → **Load unpacked** → pick `extension/workday-autofill`.
+3. Per posting, optionally `python3 scripts/workday_ext.py add <workday job url>` to tailor a resume for
+   it; the extension uploads that one on that posting. Reload the extension after `build` or `add`.
+4. Sign in on the Workday portal, open the application, click the extension → **Autofill**. Review every
+   page yourself and click Save and Continue / Submit.
+
+Extra jobs that are not on your resume (a fellowship, a board seat) go in `profile.json` as
+`extra_experience`, a list of `{company, title, location, start_month, start_year, current,
+end_month, end_year, description}`.
+
+**6. Recruiter outreach emails.** After applying, a short note to a recruiter or hiring manager at the
+company. The agent drafts; **nothing sends until you approve the batch.**
+
+- `scripts/tier_outreach.py` sorts applications into tiers: A (companies matching `outreach.tier_a_regex`,
+  or pay at or above `outreach.tier_a_min_pay_usd`), B (solid fit), C (stretch, no outreach) and R
+  (already rejected you, no outreach).
+- `scripts/apollo.py` finds recruiters and hiring managers by company domain through the
+  [Apollo](https://www.apollo.io) API (searching is free; revealing an email costs one credit). Store
+  your key in your own Terminal: `security add-generic-password -U -s apollo-api-key -a you -w`.
+- `scripts/imap_draft.py` writes each email into the sending inbox's Drafts, so you can read them in Gmail.
+- `scripts/send_batch.py state/send-batch-<date>.txt` sends an approved list over Gmail SMTP, with a gap
+  between sends, and marks each one sent in the tracker. `scripts/draft_send.py` refuses to email anyone
+  twice.
+
+Sending uses the same Gmail app password as add-on 2. For a second inbox, store its app password under
+another Keychain service and list it in `outreach_senders`. Keep a new inbox to about 15 emails a day,
+and an established one to about 40, or Gmail will start flagging you as a spammer.
 
 ## Why this instead of a one-click apply tool
 

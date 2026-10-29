@@ -12,5 +12,11 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(python3 scripts/apphelper.py *)",
+      "Bash(python3 scripts/tailor.py *)"
+    ]
   }
 }

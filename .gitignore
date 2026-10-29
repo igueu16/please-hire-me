@@ -61,3 +61,17 @@ venv/
 !data/resume.example.tex
 !data/sources.md
 data/interview-tracker.md
+
+# Workday autofill extension: generated personal data (profile + tailored resumes)
+extension/workday-autofill/data/
+
+# Personal bulk-run helpers and resume variants (tied to one user's workflow and resume)
+data/variants/
+scripts/addrole.py
+scripts/apphelper.py
+scripts/nl_sweep.py
+scripts/nyc_sweep.py
+scripts/backup.sh
+scripts/outreach_daily.sh
+scripts/metrics_export.py
+scripts/sync_applied_tab.py

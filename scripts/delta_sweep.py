@@ -75,6 +75,13 @@ TIT = re.compile(r'engineer|developer|technical staff|\bmts\b|\bswe\b|programmer
 BAD = re.compile(r'senior|\bsr\b|\bsr\.|principal|\blead\b|manager|director|head of|\bvp\b|architect|recruit|sales|account exec|designer|marketing|counsel|legal|finance|hardware|mechanical|electrical|firmware|\brf\b|analog|asic|fpga|verification|manufactur|technician|solutions engineer|support engineer|customer success|\biii\b|\biv\b|\bstaff\b', re.I)
 # Postings that promise an in-person final round. A plus for users who like being flown out, not a gate.
 FLY = re.compile(r"fly (you )?(out|in)|flown (out|in)|on-?site (final|round|interview|loop)|in-?person (final|round|interview|loop)|final (round|interview).{0,30}(on-?site|in-?person|in our office)|visit (our|the) (office|team)", re.I)
+# Optional per-user override: targets.title_include_regex / targets.title_exclude_regex in settings.json
+# (for non-engineering searches; the engineering patterns above stay the default).
+try:
+    _T = json.load(open(os.path.join(R, 'config', 'settings.json')))['targets']
+    if _T.get('title_include_regex'): TIT = re.compile(_T['title_include_regex'], re.I)
+    if _T.get('title_exclude_regex'): BAD = re.compile(_T['title_exclude_regex'], re.I)
+except Exception: pass
 titleok = lambda t: TIT.search(t) and not BAD.search(re.sub(r'technical staff', '', t, flags=re.I))
 locok = lambda loc: LOC.search(loc) and not (BADLOC.search(loc) and not USLOC.search(loc))
 

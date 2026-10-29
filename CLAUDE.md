@@ -98,6 +98,9 @@ only if the user asks for a hands-off or non-interactive path.
    result. Then **read the templates back and get explicit confirmation.** If a bullet is vague
    ("improved performance"), ask for the number instead of inventing one. This is the step that
    makes their runs work, so do not rush it.
+   **If their target roles are not software engineering** (product, operations, analytics, design,
+   anything else), also write `targets.title_include_regex`, `targets.title_exclude_regex` and
+   `targets.linkedin_query` from their roles, or the sweeps keep returning engineering postings.
 
    **Before you read the templates back, check every number and every job title in them against
    the resume, one at a time.** A figure that is close but not equal is a fabrication on a real

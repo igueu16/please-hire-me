@@ -23,9 +23,9 @@ import datetime, html, json, os, re, sys, time, urllib.error, urllib.parse, urll
 
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CUT_FILE = os.path.join(R, 'state', 'last_linkedin_sweep.txt')
-OUT = os.path.join(R, 'state', 'sweep', 'linkedin_cands.json')
+OUT = os.environ.get('LI_OUT') or os.path.join(R, 'state', 'sweep', 'linkedin_cands.json')
 UTC = datetime.timezone.utc
-DEADLINE = 420  # seconds, hard stop for the whole sweep (Bash tool timeout must exceed this)
+DEADLINE = int(os.environ.get("LI_DEADLINE", "420"))  # seconds, hard stop for the whole sweep (Bash tool timeout must exceed this)
 LOCATIONS = {  # targets.locations entry -> LinkedIn location string. Entries without one are not searched.
     'Virginia': 'Virginia, United States',
     'Pittsburgh': 'Pittsburgh, Pennsylvania, United States',
@@ -128,7 +128,15 @@ def main():
     else:
         since, advance = now - datetime.timedelta(hours=24), True
     window = max(3600, int((now - since).total_seconds()))
-    locs = [(l, LOCATIONS[l]) for l in T.get('locations', []) if l in LOCATIONS]
+    if T.get('linkedin_locations'):  # explicit {label: LinkedIn location string}, overrides the LOCATIONS mapping
+        locs = list(T['linkedin_locations'].items())
+    else:
+        locs = [(l, LOCATIONS[l]) for l in T.get('locations', []) if l in LOCATIONS]
+    if os.environ.get('LI_ONLY_AREAS'):  # e.g. LI_ONLY_AREAS="New York|Boston" to run a subset in parallel
+        locs = [x for x in locs if x[0] in os.environ['LI_ONLY_AREAS'].split('|')]
+    if os.environ.get('LI_SKIP_AREAS'):  # e.g. LI_SKIP_AREAS="San Francisco Bay Area" to re-run only the other areas
+        locs = [x for x in locs if x[0] not in os.environ['LI_SKIP_AREAS'].split('|')]
+    title_ok = re.compile(T['linkedin_title_regex'], re.I) if T.get('linkedin_title_regex') else SOFT_TITLE
     print(f'window {window // 3600}h  locations {[l for l, _ in locs]}')
 
     cards = {}
@@ -152,11 +160,31 @@ def main():
             if got < 10: break
 
     rows = []
+    pre_skip = re.compile(T['linkedin_skip_title_regex'], re.I) if T.get('linkedin_skip_title_regex') else None
+    done = set()
+    if T.get('linkedin_skip_applied'):  # companies already applied to or claimed by an agent: don't spend a detail fetch
+        # Match against the company field of each log heading ("### [date] org — role — STATUS") and the claims
+        # file, never the whole log text: a substring test on 380KB of prose matched nearly every company.
+        logtxt = open(os.path.join(R, 'logs/applications-log.md')).read()
+        done |= {re.sub(r'[^a-z0-9]', '', m.lower()) for m in re.findall(r'^#{2,4} \[?\d{4}-\d\d-\d\d\]?\s*(.*?)\s+—', logtxt, re.M)}
+        fp = os.path.join(R, 'state/agents/claims.txt')
+        if os.path.exists(fp):
+            done |= {re.sub(r'[^a-z0-9]', '', l.split('\t')[0].lower()) for l in open(fp) if l.strip()}
+        done.discard('')
+    seen_pairs = set()
+    def already(company):
+        k = re.sub(r'[^a-z0-9]', '', company.lower())
+        return len(k) > 3 and (k in done or any(len(d) > 3 and (k.startswith(d) or d.startswith(k)) for d in done))
     for c in cards.values():
+        if pre_skip and pre_skip.search(c['title']): continue
+        pair = (c['company'].lower(), c['title'].lower())
+        if pair in seen_pairs: continue
+        seen_pairs.add(pair)
+        if T.get('linkedin_skip_applied') and already(c['company']): continue
         # Location, workplace type (remote/on-site/hybrid) and experience level are deliberately NOT filtered here:
         # the boolean query and the search location are the whole filter, the way a person searches by hand.
         # years is reported for the agent to read, never used to drop a row.
-        if not SOFT_TITLE.search(c['title']) or (skip_title and skip_title.search(c['title'])) or any(s in c['company'].lower() for s in skip): continue
+        if not title_ok.search(c['title']) or (skip_title and skip_title.search(c['title'])) or any(s in c['company'].lower() for s in skip): continue
         if time.time() - t0 > DEADLINE: ok = False; break
         try: page = get(f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{c['id']}")
         except Exception as e: print('detail error', c['id'], e); continue

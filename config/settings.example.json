@@ -22,7 +22,9 @@
     "_tailor_resume_note": "Upload a one-page LaTeX resume rewritten for each posting: most relevant work first, result-first bullets, the posting's spelling for skills you have. Only facts from your base resume and fact sheet; a check rejects any other number or term. Needs profile.json resume_tailor_base and tectonic + poppler (setup installs them). false: always upload the default resume. Rules: config/documents.md.",
     "resume_max_pages": 1,
     "cover_letter_min_words": 150,
-    "cover_letter_max_words": 250
+    "cover_letter_max_words": 250,
+    "export_dir": "",
+    "_export_dir_note": "Optional folder where scripts/workday_ext.py drops a copy of each tailored resume so you can attach it by hand. Empty means ~/Desktop/custom resume."
   },
   "targets": {
     "roles": [
@@ -56,7 +58,16 @@
     "skip_notes": [
       "Defense and ITAR employers require US persons.",
       "Companies that do not sponsor visas are a dead end if you need sponsorship."
-    ]
+    ],
+    "title_include_regex": "",
+    "title_exclude_regex": "",
+    "_title_regex_note": "Optional. Override which job titles scripts/delta_sweep.py keeps. Empty keeps the built-in software-engineering patterns. Non-engineering example: include \"product manager|\\\\bapm\\\\b|product operations|product analyst\", exclude \"principal|\\\\bstaff\\\\b|director|head of|\\\\bvp\\\\b|intern\".",
+    "linkedin_query": "",
+    "linkedin_title_regex": "",
+    "linkedin_skip_title_regex": "",
+    "linkedin_locations": {},
+    "linkedin_skip_applied": true,
+    "_linkedin_note": "Optional overrides for scripts/linkedin_sweep.py. linkedin_query is one boolean LinkedIn search, e.g. (\"associate product manager\" OR \"product operations\"). linkedin_title_regex keeps matching titles; linkedin_skip_title_regex drops them before the posting is fetched. linkedin_locations maps a label to LinkedIn's location string, e.g. {\"New York\": \"New York, United States\"}. Empty values keep the defaults. LinkedIn stays a source only: the agent never signs in or uses Easy Apply."
   },
   "eligibility": {
     "needs_visa_sponsorship": false,
@@ -99,5 +110,13 @@
   "integrations": {
     "post_run_script": "",
     "_post_run_note": "Optional path to a python3 script run after each run. Left empty by default."
-  }
+  },
+  "outreach": {
+    "tracker_path": "",
+    "tier_a_regex": "",
+    "tier_a_min_pay_usd": 200000,
+    "_outreach_note": "Optional recruiter-email add-on (scripts/tier_outreach.py, imap_draft.py, draft_send.py, send_batch.py, apollo.py). tracker_path is the JSON file of applications and their outreach contacts; empty means state/outreach-tracker.json. tier_a_regex marks the companies or areas you care most about (e.g. \"health|fitness|climate\"); those, plus roles paying at least tier_a_min_pay_usd, become Tier A (email plus LinkedIn). Emails send over Gmail SMTP with an app password from your Keychain, only for batches you approved. See README, Recruiter outreach."
+  },
+  "outreach_senders": {},
+  "_outreach_senders_note": "Optional. Gmail address -> Keychain service holding its app password, for each inbox you send outreach from. The broker.gmail_account inbox is used when --account is not given. Keep each new Gmail inbox to about 15 emails a day while it warms up."
 }
